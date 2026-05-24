@@ -2,4 +2,8 @@
   <Folder Name="/src/">
     <Project Path="src/CloudNativePaymentsLab.Api/CloudNativePaymentsLab.Api.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/IntegrationTests/CloudNativePaymentsLab.IntegrationTests.csproj" />
+    <Project Path="tests/UnitTests/CloudNativePaymentsLab.UnitTests.csproj" />
+  </Folder>
 </Solution>

@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using CloudNativePaymentsLab.Api.BuildingBlocks.Infrastructure;
 using CloudNativePaymentsLab.Api.Modules.Messaging.Application;
 using CloudNativePaymentsLab.Api.Modules.Messaging.Infrastructure;
@@ -5,7 +6,6 @@ using CloudNativePaymentsLab.Api.Modules.Orders.Application;
 using CloudNativePaymentsLab.Api.Modules.Orders.Infrastructure;
 using CloudNativePaymentsLab.Api.Modules.Orders.Presentation;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 

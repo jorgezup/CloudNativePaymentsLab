@@ -1,6 +1,7 @@
 # Pastas de compilação
 [Bb]in/
 [Oo]bj/
+TestResults/
 
 # Pastas de ferramentas e IDEs
 .vscode/

@@ -1,0 +1,17 @@
+pre-commit:
+  commands:
+    format:
+      run: dotnet format CloudNativePaymentsLab.slnx --verify-no-changes
+    build:
+      run: dotnet build CloudNativePaymentsLab.slnx
+    validate-new-classes-have-tests:
+      run: tools/quality/validate-new-classes-have-tests.sh
+
+pre-push:
+  commands:
+    validate-new-classes-have-tests:
+      run: tools/quality/validate-new-classes-have-tests.sh
+    unit-tests:
+      run: tools/quality/run-unit-tests-with-coverage.sh
+    integration-tests:
+      run: tools/quality/run-integration-tests-with-coverage.sh

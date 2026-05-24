@@ -27,6 +27,7 @@ Objetivos principais:
 4. Testar fluxos críticos de ponta a ponta dentro do limite da aplicação.
 5. Validar idempotência, persistência, outbox/inbox, consumers e repositories.
 6. Garantir que os testes sejam determinísticos e possam rodar em ambiente local/CI.
+7. Separar claramente testes integrados de testes unitários.
 
 Tipos de componentes que devem ter testes integrados:
 - Repositories
@@ -53,6 +54,15 @@ Classes que normalmente não precisam de teste integrado direto:
 - Mappers simples sem persistência
 - Constants
 - Enums sem lógica
+- Código cuja única responsabilidade é configurar objetos simples
+
+Quando decidir entre teste integrado e unitário:
+- Use teste integrado quando o objetivo for validar PostgreSQL, Kafka, migrations, repositories, constraints, WebApplicationFactory, containers ou comportamento real de infraestrutura.
+- Use teste unitário quando a lógica puder ser exercitada sem infraestrutura real.
+- Não use banco em memória para substituir PostgreSQL quando o comportamento do PostgreSQL for parte do teste.
+- Não use Kafka mockado quando o objetivo for validar produção, consumo, headers, consumer group ou retry real.
+- Não force teste integrado para DTOs, regras puras ou classes que devem ser cobertas unitariamente.
+- Se uma classe mistura infraestrutura e regra de negócio de forma difícil de testar, explique o problema e sugira refatoração.
 
 Padrão obrigatório dos testes:
 Use o padrão Arrange, Act, Assert.
@@ -94,6 +104,17 @@ Regras de escrita:
 - Testes devem evitar sleeps fixos longos.
 - Quando precisar aguardar eventos assíncronos, usar polling com timeout.
 - Testes devem ter mensagens de erro claras.
+- Preferir fixtures compartilhadas para infraestrutura pesada e setup local para dados específicos do cenário.
+- Não esconder o fluxo principal do teste em helpers excessivamente genéricos.
+
+Regras para Testcontainers e infraestrutura:
+- Usar containers descartáveis ou fixtures controladas para PostgreSQL e Kafka.
+- Reutilizar containers entre testes quando isso reduzir custo sem vazar estado.
+- Aplicar migrations reais quando o objetivo envolver schema, constraints ou queries.
+- Limpar dados entre testes com Respawn ou estratégia equivalente.
+- Configurar portas, connection strings e bootstrap servers dinamicamente a partir dos containers.
+- Não depender de serviços instalados manualmente na máquina.
+- Não depender de infraestrutura externa compartilhada.
 
 Quando testar PostgreSQL:
 Validar:
@@ -157,6 +178,8 @@ Validar:
 Cobertura:
 - Todo código novo relevante em fluxos integrados deve ter no mínimo 80% de cobertura por testes integrados quando fizer sentido.
 - A cobertura integrada deve focar fluxos críticos, não apenas chamadas superficiais.
+- Não forçar cobertura integrada para lógica pura que deve ser coberta por teste unitário.
+- Não tentar resolver cobertura incremental perfeita por diff na primeira versão; usar cobertura global pragmática dos projetos de teste quando essa for a estratégia disponível.
 - Se a cobertura de integração não fizer sentido para determinada classe, explicar e indicar se deve ser coberta por teste unitário.
 
 Estrutura esperada:
@@ -166,16 +189,26 @@ Estrutura esperada:
 - Criar helpers para limpeza do banco.
 - Criar builders/factories para massa de teste.
 - Evitar duplicação excessiva de setup.
+- Manter helpers específicos o suficiente para não esconder a intenção do cenário.
 
-Antes de criar testes:
+Workflow antes de criar testes:
 1. Leia o fluxo alvo.
-2. Identifique dependências reais necessárias.
-3. Verifique se já existem fixtures ou containers configurados.
-4. Planeje cenários críticos.
-5. Crie testes integrados.
-6. Rode os testes.
-7. Corrija falhas.
-8. Verifique cobertura.
+2. Leia testes integrados existentes relacionados.
+3. Identifique dependências reais necessárias.
+4. Verifique os nomes reais dos projetos em src/ e tests/.
+5. Verifique se já existem fixtures ou containers configurados.
+6. Planeje cenários críticos.
+7. Crie testes integrados seguindo Arrange, Act, Assert.
+8. Rode os testes integrados relevantes.
+9. Corrija falhas.
+10. Verifique cobertura quando aplicável.
+
+Comandos esperados:
+- Rodar dotnet test no projeto de testes integrados ou solution adequada.
+- Quando cobertura for necessária, usar Coverlet ou configuração já existente no projeto.
+- Usar Docker/Testcontainers apenas para infraestrutura controlada de teste integrado.
+- Não usar nomes genéricos de projeto quando os .csproj reais já existirem.
+- Não rodar formatadores que alterem arquivos sem necessidade explícita.
 
 Ao finalizar:
 Apresente:
@@ -183,6 +216,8 @@ Apresente:
 - quais fluxos foram cobertos;
 - quais dependências reais foram usadas;
 - como os dados são limpos entre testes;
+- comando de teste executado;
+- resultado dos testes;
 - se a cobertura mínima foi atingida;
 - riscos de flaky tests;
 - sugestões para melhorar confiabilidade.
@@ -193,3 +228,4 @@ Limitações:
 - Não exigir serviços instalados manualmente fora do Docker/Testcontainers.
 - Não usar Thread.Sleep fixo como estratégia principal de sincronização.
 - Não deixar dados sujos entre testes.
+- Não transformar teste integrado em teste unitário com mocks quando o comportamento real de infraestrutura for o objetivo.
