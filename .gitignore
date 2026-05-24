@@ -1,0 +1,7 @@
+# Pastas de compilação
+[Bb]in/
+[Oo]bj/
+
+# Pastas de ferramentas e IDEs
+.vscode/
+.idea/

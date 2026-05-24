@@ -1,0 +1,6 @@
+@CloudNativePaymentsLab.Api_HostAddress = http://localhost:0
+
+GET {{CloudNativePaymentsLab.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

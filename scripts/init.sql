@@ -1,0 +1,2 @@
+-- Schema is managed by EF Core migrations in this POC.
+-- Kept as a placeholder for future seed data or database bootstrap scripts.

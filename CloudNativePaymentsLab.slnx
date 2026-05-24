@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CloudNativePaymentsLab.Api/CloudNativePaymentsLab.Api.csproj" />
+  </Folder>
+</Solution>
