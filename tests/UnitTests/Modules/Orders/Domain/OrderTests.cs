@@ -58,4 +58,34 @@ public sealed class OrderTests
         order.Status.Should().Be(OrderStatus.Processing);
         order.UpdatedAt.Should().Be(firstProcessingAt);
     }
+
+    [Theory]
+    [InlineData("Paid", OrderStatus.Paid)]
+    [InlineData("PaymentFailed", OrderStatus.PaymentFailed)]
+    [InlineData("PaymentPendingRetry", OrderStatus.PaymentPendingRetry)]
+    public void PaymentStatusTransitions_WhenCalled_ShouldChangeStatusAndUpdatedAt(string transition, OrderStatus expectedStatus)
+    {
+        // Arrange
+        var createdAt = new DateTimeOffset(2026, 5, 24, 10, 0, 0, TimeSpan.Zero);
+        var updatedAt = new DateTimeOffset(2026, 5, 24, 10, 5, 0, TimeSpan.Zero);
+        var order = Order.Create("customer-1", 99.90m, "BRL", "ORDER:customer-1:reference-1", createdAt);
+
+        // Act
+        switch (transition)
+        {
+            case "Paid":
+                order.MarkAsPaid(updatedAt);
+                break;
+            case "PaymentFailed":
+                order.MarkAsPaymentFailed(updatedAt);
+                break;
+            case "PaymentPendingRetry":
+                order.MarkAsPaymentPendingRetry(updatedAt);
+                break;
+        }
+
+        // Assert
+        order.Status.Should().Be(expectedStatus);
+        order.UpdatedAt.Should().Be(updatedAt);
+    }
 }

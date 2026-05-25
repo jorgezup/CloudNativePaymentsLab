@@ -38,4 +38,31 @@ public sealed class Order
             UpdatedAt = now;
         }
     }
+
+    public void MarkAsPaid(DateTimeOffset now)
+    {
+        if (Status is not OrderStatus.Paid)
+        {
+            Status = OrderStatus.Paid;
+            UpdatedAt = now;
+        }
+    }
+
+    public void MarkAsPaymentFailed(DateTimeOffset now)
+    {
+        if (Status is not OrderStatus.PaymentFailed)
+        {
+            Status = OrderStatus.PaymentFailed;
+            UpdatedAt = now;
+        }
+    }
+
+    public void MarkAsPaymentPendingRetry(DateTimeOffset now)
+    {
+        if (Status is not OrderStatus.PaymentPendingRetry)
+        {
+            Status = OrderStatus.PaymentPendingRetry;
+            UpdatedAt = now;
+        }
+    }
 }

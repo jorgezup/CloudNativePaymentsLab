@@ -10,4 +10,7 @@ public sealed class KafkaOptions
 public sealed class KafkaTopics
 {
     public string OrderCreated { get; init; } = "orders.order-created";
+    public string PaymentApproved { get; init; } = "payments.payment-approved";
+    public string PaymentFailed { get; init; } = "payments.payment-failed";
+    public string PaymentsDeadLetter { get; init; } = "payments.dlq";
 }

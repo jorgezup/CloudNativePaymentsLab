@@ -16,13 +16,14 @@ public sealed class OutboxMessageTests
         var createdAt = new DateTimeOffset(2026, 5, 24, 11, 0, 0, TimeSpan.Zero);
 
         // Act
-        var message = new OutboxMessage(id, aggregateId, "Order", "OrderCreated", "{}", correlationId, causationId, createdAt);
+        var message = new OutboxMessage(id, aggregateId, "Order", "OrderCreated", "orders.order-created", "{}", correlationId, causationId, createdAt);
 
         // Assert
         message.Id.Should().Be(id);
         message.AggregateId.Should().Be(aggregateId);
         message.AggregateType.Should().Be("Order");
         message.EventType.Should().Be("OrderCreated");
+        message.Topic.Should().Be("orders.order-created");
         message.Payload.Should().Be("{}");
         message.Status.Should().Be(OutboxMessageStatus.Pending);
         message.RetryCount.Should().Be(0);
@@ -90,6 +91,7 @@ public sealed class OutboxMessageTests
             Guid.Parse("a14f306d-3d80-454c-8e79-724f20b0e5f3"),
             "Order",
             "OrderCreated",
+            "orders.order-created",
             "{}",
             Guid.Parse("eb9d30f1-cf0c-4f6d-ae2f-3d53e9f1992f"),
             Guid.Parse("a9651a72-6fef-414a-ad73-0fa51a3e8189"),

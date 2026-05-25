@@ -5,5 +5,6 @@ public enum OrderStatus
     Created = 0,
     Processing = 1,
     Paid = 2,
-    Failed = 3
+    PaymentFailed = 3,
+    PaymentPendingRetry = 4
 }

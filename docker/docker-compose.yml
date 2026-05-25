@@ -59,7 +59,10 @@ services:
         condition: service_healthy
     entrypoint: ["/bin/sh", "-c"]
     command: >
-      "rpk topic create orders.order-created --brokers redpanda:29092 || true"
+      "rpk topic create orders.order-created --brokers redpanda:29092 || true;
+       rpk topic create payments.payment-approved --brokers redpanda:29092 || true;
+       rpk topic create payments.payment-failed --brokers redpanda:29092 || true;
+       rpk topic create payments.dlq --brokers redpanda:29092 || true"
 
 volumes:
   postgres-data:

@@ -1,8 +1,7 @@
 using System.Text.Json;
 using CloudNativePaymentsLab.Api.BuildingBlocks.Infrastructure;
 using CloudNativePaymentsLab.Api.Modules.Messaging.Application;
-using CloudNativePaymentsLab.Api.Modules.Messaging.Domain;
-using CloudNativePaymentsLab.Api.Modules.Orders.Application;
+using CloudNativePaymentsLab.Api.Modules.Payments.Application;
 using Confluent.Kafka;
 using Microsoft.Extensions.Options;
 
@@ -13,7 +12,6 @@ public sealed class OrderCreatedConsumerWorker(
     IOptions<KafkaOptions> kafkaOptions,
     ILogger<OrderCreatedConsumerWorker> logger) : BackgroundService
 {
-    private const string ConsumerName = "CloudNativePaymentsLab.OrderCreatedConsumer";
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true
@@ -42,6 +40,7 @@ public sealed class OrderCreatedConsumerWorker(
                 var result = consumer.Consume(stoppingToken);
                 ProcessMessageAsync(result.Message.Value, stoppingToken).GetAwaiter().GetResult();
                 consumer.Commit(result);
+                logger.LogInformation("Kafka offset committed after database transaction for offset {Offset}", result.Offset);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -58,37 +57,23 @@ public sealed class OrderCreatedConsumerWorker(
 
     private async Task ProcessMessageAsync(string rawMessage, CancellationToken cancellationToken)
     {
-        var envelope = JsonSerializer.Deserialize<IntegrationEventEnvelope<OrderCreatedPayload>>(rawMessage, SerializerOptions)
-            ?? throw new InvalidOperationException("Invalid OrderCreated message");
-
-        logger.LogInformation("Kafka message consumed {MessageId} for order {OrderId}", envelope.MessageId, envelope.Payload.OrderId);
-
         using var scope = scopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PaymentsDbContext>();
-        var inboxRepository = scope.ServiceProvider.GetRequiredService<IInboxRepository>();
-        var orderRepository = scope.ServiceProvider.GetRequiredService<IOrderRepository>();
+        var paymentProcessor = scope.ServiceProvider.GetRequiredService<PaymentProcessingService>();
 
-        // Consumidores precisam ser idempotentes porque Kafka pode entregar novamente uma mensagem ja processada.
-        if (await inboxRepository.ExistsAsync(envelope.MessageId, ConsumerName, cancellationToken))
+        try
         {
-            logger.LogInformation("Duplicate message ignored {MessageId} for consumer {ConsumerName}", envelope.MessageId, ConsumerName);
-            return;
+            var envelope = JsonSerializer.Deserialize<IntegrationEventEnvelope<OrderCreatedPayload>>(rawMessage, SerializerOptions)
+                ?? throw new InvalidOperationException("Invalid OrderCreated message");
+
+            await paymentProcessor.ProcessOrderCreatedAsync(envelope, rawMessage, cancellationToken);
         }
-
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-        var order = await orderRepository.GetByIdAsync(envelope.Payload.OrderId, cancellationToken)
-            ?? throw new InvalidOperationException($"Order {envelope.Payload.OrderId} was not found");
-
-        order.MarkAsProcessing(DateTimeOffset.UtcNow);
-        await inboxRepository.AddAsync(new InboxMessage(envelope.MessageId, ConsumerName, envelope.EventType, envelope.AggregateId, DateTimeOffset.UtcNow), cancellationToken);
-
-        // A Inbox e a atualizacao do pedido ficam na mesma transacao: sem isso, uma falha no meio poderia
-        // registrar o consumo sem aplicar o efeito, ou aplicar o efeito e permitir uma duplicidade depois.
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-
-        // O offset so deve ser commitado depois do sucesso no banco; caso contrario, o evento poderia ser perdido.
-        logger.LogInformation("Inbox message saved {MessageId} for consumer {ConsumerName}", envelope.MessageId, ConsumerName);
+        catch (JsonException exception)
+        {
+            await paymentProcessor.MoveInvalidMessageToDeadLetterAsync(rawMessage, exception.Message, cancellationToken);
+        }
+        catch (InvalidOperationException exception) when (exception.Message.Contains("Invalid OrderCreated message", StringComparison.Ordinal))
+        {
+            await paymentProcessor.MoveInvalidMessageToDeadLetterAsync(rawMessage, exception.Message, cancellationToken);
+        }
     }
 }

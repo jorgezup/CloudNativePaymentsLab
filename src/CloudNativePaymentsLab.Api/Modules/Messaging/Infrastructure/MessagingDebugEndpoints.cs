@@ -19,6 +19,7 @@ public static class MessagingDebugEndpoints
                     message.AggregateId,
                     message.AggregateType,
                     message.EventType,
+                    message.Topic,
                     message.Status,
                     message.RetryCount,
                     message.CreatedAt,

@@ -54,9 +54,9 @@ public sealed class OutboxPublisherWorker(
                 message.MarkAsProcessing();
                 await dbContext.SaveChangesAsync(cancellationToken);
 
-                logger.LogInformation("Outbox message publishing {MessageId} to topic {Topic}", message.Id, kafkaOptions.Value.Topics.OrderCreated);
+                logger.LogInformation("Outbox message publishing {MessageId} to topic {Topic}", message.Id, message.Topic);
                 await producer.ProduceAsync(
-                    kafkaOptions.Value.Topics.OrderCreated,
+                    message.Topic,
                     new Message<string, string>
                     {
                         Key = message.AggregateId.ToString(),

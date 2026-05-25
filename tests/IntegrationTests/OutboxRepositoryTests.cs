@@ -34,6 +34,7 @@ public sealed class OutboxRepositoryTests(PostgreSqlFixture fixture) : IClassFix
             Guid.NewGuid(),
             "Order",
             eventType,
+            "orders.order-created",
             "{}",
             Guid.NewGuid(),
             Guid.NewGuid(),

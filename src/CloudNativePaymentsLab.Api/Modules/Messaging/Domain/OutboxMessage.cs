@@ -11,6 +11,7 @@ public sealed class OutboxMessage
         Guid aggregateId,
         string aggregateType,
         string eventType,
+        string topic,
         string payload,
         Guid correlationId,
         Guid causationId,
@@ -20,6 +21,7 @@ public sealed class OutboxMessage
         AggregateId = aggregateId;
         AggregateType = aggregateType;
         EventType = eventType;
+        Topic = topic;
         Payload = payload;
         Status = OutboxMessageStatus.Pending;
         RetryCount = 0;
@@ -32,6 +34,7 @@ public sealed class OutboxMessage
     public Guid AggregateId { get; private set; }
     public string AggregateType { get; private set; } = string.Empty;
     public string EventType { get; private set; } = string.Empty;
+    public string Topic { get; private set; } = string.Empty;
     public string Payload { get; private set; } = string.Empty;
     public OutboxMessageStatus Status { get; private set; }
     public int RetryCount { get; private set; }

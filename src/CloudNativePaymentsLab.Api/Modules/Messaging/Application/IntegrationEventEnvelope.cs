@@ -16,3 +16,28 @@ public sealed record OrderCreatedPayload(
     decimal Amount,
     string Currency,
     string IdempotencyKey);
+
+public sealed record PaymentApprovedPayload(
+    Guid PaymentId,
+    Guid OrderId,
+    string CustomerId,
+    decimal Amount,
+    string Currency,
+    string IdempotencyKey,
+    string ProviderTransactionId);
+
+public sealed record PaymentFailedPayload(
+    Guid PaymentId,
+    Guid OrderId,
+    string CustomerId,
+    decimal Amount,
+    string Currency,
+    string IdempotencyKey,
+    string Reason);
+
+public sealed record PaymentMovedToDeadLetterPayload(
+    Guid PaymentId,
+    Guid OrderId,
+    Guid OriginalMessageId,
+    string Reason,
+    int RetryCount);

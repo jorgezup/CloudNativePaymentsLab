@@ -6,3 +6,8 @@ TestResults/
 # Pastas de ferramentas e IDEs
 .vscode/
 .idea/
+
+code-quality.md
+definitions.md
+poc-v1.md
+poc-v2.md
